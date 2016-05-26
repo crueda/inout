@@ -59,10 +59,10 @@ except:
 ########################################################################
 
 
-def getIn():
+def getVesselsIn():
 	dbFrontend = MySQLdb.connect(MYSQL_IP, MYSQL_USER, MYSQL_PASSWORD, MYSQL_NAME)
 
-	cursor = dbKyros4.cursor()
+	cursor = dbFrontend.cursor()
 	query = """SELECT 
 		DEVICE_ID
 		FROM TRACKING_1
@@ -78,10 +78,9 @@ def getIn():
 	query = query.replace('lon_max', MAX_LON)
 	query = query.replace('lon_min', MIN_LON)
 
-	print query
-
-	#cursor.execute()
-	#result = cursor.fetchall()
+	#print query
+	cursor.execute(query)
+	result = cursor.fetchall()
 	
 	try:
 		return result
@@ -91,12 +90,108 @@ def getIn():
 	cursor.close
 	dbFrontend.close
 
-array_list = []
-trackingInfo = getIn()
-ntrackings = 0
+def putVesselsIn(vesselList):
+	dbFrontend = MySQLdb.connect(MYSQL_IP, MYSQL_USER, MYSQL_PASSWORD, MYSQL_NAME)
 
-for tracking in trackingInfo:
-	print tracking[0]
-	ntrackings+=1
+	cursor = dbFrontend.cursor()
+	query = """UPDATE 
+		VEHICLE
+		SET VEHICLE.INOUT=1
+		WHERE 
+		DEVICE_ID in (vesselList)
+		"""
 
-print ntrackings
+	query = query.replace('vesselList', vesselList)
+
+	#print query
+	cursor.execute(query)
+	result = cursor.fetchall()
+	
+	try:
+		return result
+	except Exception, error:
+		logger.error('Error getting data from database: %s.', error )
+		
+	cursor.close
+	dbFrontend.close
+
+def getVesselsOut():
+	dbFrontend = MySQLdb.connect(MYSQL_IP, MYSQL_USER, MYSQL_PASSWORD, MYSQL_NAME)
+
+	cursor = dbFrontend.cursor()
+	query = """SELECT 
+		DEVICE_ID
+		FROM TRACKING_1
+		WHERE 
+		round(POS_LATITUDE_DEGREE,5) + round(POS_LATITUDE_MIN/60,5) > lat_max OR
+		round(POS_LATITUDE_DEGREE,5) + round(POS_LATITUDE_MIN/60,5) < lat_min OR
+		round(POS_LONGITUDE_DEGREE,5) + round(POS_LONGITUDE_MIN/60,5) > lon_max OR
+		round(POS_LONGITUDE_DEGREE,5) + round(POS_LONGITUDE_MIN/60,5) < lon_min
+		"""
+
+	query = query.replace('lat_max', MAX_LAT)
+	query = query.replace('lat_min', MIN_LAT)
+	query = query.replace('lon_max', MAX_LON)
+	query = query.replace('lon_min', MIN_LON)
+
+	#print query
+	cursor.execute(query)
+	result = cursor.fetchall()
+	
+	try:
+		return result
+	except Exception, error:
+		logger.error('Error getting data from database: %s.', error )
+		
+	cursor.close
+	dbFrontend.close
+
+def putVesselsOut(vesselList):
+	dbFrontend = MySQLdb.connect(MYSQL_IP, MYSQL_USER, MYSQL_PASSWORD, MYSQL_NAME)
+
+	cursor = dbFrontend.cursor()
+	query = """UPDATE 
+		VEHICLE
+		SET VEHICLE.INOUT=0
+		WHERE 
+		DEVICE_ID in (vesselList)
+		"""
+
+	query = query.replace('vesselList', vesselList)
+
+	#print query
+	cursor.execute(query)
+	result = cursor.fetchall()
+	
+	try:
+		return result
+	except Exception, error:
+		logger.error('Error getting data from database: %s.', error )
+		
+	cursor.close
+	dbFrontend.close
+
+vIn = getVesselsIn()
+vesselsIn = ''
+numVesselsIn = 0
+for ele in vIn:	
+	if (numVesselsIn==0):
+		vesselsIn = str(ele[0])
+	else:
+		vesselsIn = vesselsIn + ',' + str(ele[0])
+	numVesselsIn += 1
+putVesselsIn(vesselsIn)
+
+vOut = getVesselsOut()
+vesselsOut = ''
+numVesselsOut = 0
+for eleOut in vOut:	
+	if (numVesselsOut==0):
+		vesselsOut = str(eleOut[0])
+	else:
+		vesselsOut = vesselsOut + ',' + str(eleOut[0])
+	numVesselsOut += 1
+putVesselsOut(vesselsOut)
+
+print "Vessels in : " + str(numVesselsIn)
+print "Vessels out: " + str(numVesselsOut)
