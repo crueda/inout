@@ -60,28 +60,28 @@ except:
 
 
 def getIn():
-	dbKyros4 = MySQLdb.connect(MYSQL_IP, MYSQL_USER, MYSQL_PASSWORD, MYSQL_NAME)
-	try:
-		dbKyros4 = MySQLdb.connect(MYSQL_IP, MYSQL_USER, MYSQL_PASSWORD, MYSQL_NAME)
-	except:
-		logger.error('Error connecting to database: IP:%s, USER:%s, PASSWORD:%s, DB:%s', MYSQL_IP, MYSQL_USER, MYSQL_PASSWORD, MYSQL_NAME)
+	dbFrontend = MySQLdb.connect(MYSQL_IP, MYSQL_USER, MYSQL_PASSWORD, MYSQL_NAME)
 
 	cursor = dbKyros4.cursor()
-	cursor.execute("""SELECT 
+	query = """SELECT 
 		DEVICE_ID
-		round(POS_LATITUDE_DEGREE,5) + round(POS_LATITUDE_MIN/60,5) as LAT, 
-		round(POS_LONGITUDE_DEGREE,5) + round(POS_LONGITUDE_MIN/60,5) as LON, 
-		round(GPS_SPEED,1) as speed,
-		round(HEADING,1) as heading,
-		POS_DATE as DATE 
 		FROM TRACKING_1
 		WHERE 
 		round(POS_LATITUDE_DEGREE,5) + round(POS_LATITUDE_MIN/60,5) < lat_max AND
 		round(POS_LATITUDE_DEGREE,5) + round(POS_LATITUDE_MIN/60,5) > lat_min AND
 		round(POS_LONGITUDE_DEGREE,5) + round(POS_LONGITUDE_MIN/60,5) < lon_max AND
 		round(POS_LONGITUDE_DEGREE,5) + round(POS_LONGITUDE_MIN/60,5) > lon_min
-		""")
-	result = cursor.fetchall()
+		"""
+
+	query = query.replace('lat_max', MAX_LAT)
+	query = query.replace('lat_min', MIN_LAT)
+	query = query.replace('lon_max', MAX_LON)
+	query = query.replace('lon_min', MIN_LON)
+
+	print query
+
+	#cursor.execute()
+	#result = cursor.fetchall()
 	
 	try:
 		return result
